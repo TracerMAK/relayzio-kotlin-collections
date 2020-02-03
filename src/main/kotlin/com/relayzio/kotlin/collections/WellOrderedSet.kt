@@ -36,6 +36,13 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
         override fun isEmpty() = false
 
         override fun iterator(): Iterator<@UnsafeVariance E> = TODO("")
+		
+		companion object {
+			operator fun <E> invoke(vararg elems: E): WellOrderedSet<E> =
+			    elems.foldRight(Empty()) {
+				elem: E, set: WellOrderedSet<E> -> Cons(elem, set)
+				}
+		}
 				   
 	}
 	
