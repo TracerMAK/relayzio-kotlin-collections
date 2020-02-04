@@ -36,14 +36,15 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
         override fun isEmpty() = false
 
         override fun iterator(): Iterator<@UnsafeVariance E> = TODO("")
-		
-		companion object {
-			operator fun <E> invoke(vararg elems: E): WellOrderedSet<E> =
-			    elems.foldRight(Empty()) {
-				elem: E, set: WellOrderedSet<E> -> Cons(elem, set)
-				}
-		}
 				   
 	}
 	
+	companion object {
+		operator fun <E> invoke(vararg elems: E): WellOrderedSet<E> {
+		    val set = setOf(*elems)
+			return set.toList().foldRight(Empty()) {
+			    head: E, tail: WellOrderedSet<E> -> Cons(head, tail)
+		    }
+		}
+	}
 }
