@@ -1,2 +1,5 @@
 readme.txt
 target/
+*.pnproj
+*.pnps
+*.ppg

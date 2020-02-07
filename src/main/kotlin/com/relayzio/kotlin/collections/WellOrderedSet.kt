@@ -1,6 +1,7 @@
 package com.relayzio.kotlin.collections
 
 import java.io.Serializable
+import com.relayzio.kotlin.common.SequentialSearchTable
 
 /**
  * A well-ordered readonly Set that guarantees the existence of a least element and
@@ -8,6 +9,10 @@ import java.io.Serializable
  */
 sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
 
+    private val table: SequentialSearchTable<E> by lazy {
+	    SequentialSearchTable<E>(997)	// TODO: Adjust for start size of set
+	}
+	
     override abstract val size: Int
 	override abstract fun contains(element: @UnsafeVariance E): Boolean
 	override abstract fun containsAll(elements: Collection<@UnsafeVariance E>): Boolean
@@ -27,7 +32,7 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
 	
 	internal class Cons<E>(internal val head: E,
 	                       internal val tail: WellOrderedSet<E>) : WellOrderedSet<E>() {
-						   
+			   
 		override val size: Int = tail.size + 1
 		
         override fun contains(element: @UnsafeVariance E): Boolean = TODO("")
