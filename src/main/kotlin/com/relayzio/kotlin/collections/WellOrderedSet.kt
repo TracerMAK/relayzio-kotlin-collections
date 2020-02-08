@@ -1,7 +1,7 @@
 package com.relayzio.kotlin.collections
 
 import java.io.Serializable
-import com.relayzio.kotlin.common.SequentialSearchTable
+import com.relayzio.kotlin.tables.SequentialSearchTable
 
 /**
  * A well-ordered readonly Set that guarantees the existence of a least element and
