@@ -14,6 +14,7 @@ class Widget(val id: Int, val value: Int) {
 		return true
 	}
 	override fun hashCode() = 5
+	override fun toString(): String = id.toString()
 }
 
 class SequentialSearchTableTest {
@@ -34,8 +35,9 @@ class SequentialSearchTableTest {
 		// into the table has 'id' = 1 and the second has 'id' = 2. The
 		// object with 'id' = 2 should be rejected.
 	    val table = SequentialSearchTable<Widget>(10)
-		val w1 = Widget(1, 5)
-		val w2 = Widget(2, 5)
+		val w1 = Widget(1, 6)
+		val w2 = Widget(2, 6)
+		
 		table.put(w1)
 		table.put(w2)
 		assertTrue(table.contains(w1))

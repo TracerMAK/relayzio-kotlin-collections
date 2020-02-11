@@ -5,7 +5,12 @@ class SequentialSearchTable<V>(val size: Int) {
     private val lists = arrayOfNulls<Node<V>>(size)
 	
 	private data class Node<V>(val next: Node<V>?, val value: V) {
-	    
+	    val size: Int by lazy {
+		    if (next == null) 1
+			else next.size + 1
+		}
+		
+	    override fun toString() = value.toString()
 	}
 
     private fun hash(value: V): Int = (value.hashCode() and 0x7fffffff) % size
@@ -18,8 +23,7 @@ class SequentialSearchTable<V>(val size: Int) {
 	}
 	
 	fun contains(value: V): Boolean {
-	    val h = hash(value)
-		var l = lists[h]
+		var l = lists[hash(value)]
 		if (l?.value == value) return true
 		
 		while (l?.next != null) {
