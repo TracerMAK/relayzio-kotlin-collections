@@ -14,12 +14,14 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
 	override abstract fun containsAll(elements: Collection<@UnsafeVariance E>): Boolean
 	override abstract fun isEmpty(): Boolean
 	override abstract fun iterator(): Iterator<@UnsafeVariance E>
+	abstract fun listSize(index: Int): Int?
 
     internal class Empty : WellOrderedSet<Nothing>() {
 	    override val size: Int = 0
 		override fun contains(element: Nothing): Boolean = false
 		override fun containsAll(elements: Collection<Nothing>): Boolean = false		
 		override fun isEmpty() = true
+		override fun listSize(index: Int): Int? = 0
 		
 		override fun iterator(): Iterator<Nothing> = object : AbstractIterator<Nothing>() {
 		    override fun computeNext() = done()
@@ -27,13 +29,18 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
 	}
 	
 	internal class Cons<E>(internal val head: E,
-	                       internal val tail: WellOrderedSet<E>) : WellOrderedSet<E>() {
-						   
-		init { WellOrderedSet.table.put(head) }
-			   
+	                       internal val tail: WellOrderedSet<E>,
+                           internal val table: SequentialSearchTable<Any?>) : WellOrderedSet<E>() {
+		
+		init {
+		    table.put(head)
+		}
+		
+		override fun listSize(index: Int): Int? = table.size(index)
+		
 		override val size: Int = tail.size + 1
 		
-        override fun contains(element: @UnsafeVariance E): Boolean = WellOrderedSet.table.contains(element)
+        override fun contains(element: @UnsafeVariance E): Boolean = table.contains(element)
 		
         override fun containsAll(elements: Collection<@UnsafeVariance E>): Boolean = TODO("")
 		
@@ -44,15 +51,12 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
 	}
 	
 	companion object {
-		
-		private val tbl = SequentialSearchTable<Any?>(997)
-		
-		private val table: SequentialSearchTable<Any?> = tbl
-		
+
 		operator fun <E> invoke(vararg elems: E): WellOrderedSet<E> {
 		    val set = setOf(*elems)
+			val table = SequentialSearchTable<Any?>(997)
 			return set.toList().foldRight(Empty()) {
-			    head: E, tail: WellOrderedSet<E> -> Cons(head, tail)
+			    head: E, tail: WellOrderedSet<E> -> Cons(head, tail, table)
 		    }
 		}
 	}

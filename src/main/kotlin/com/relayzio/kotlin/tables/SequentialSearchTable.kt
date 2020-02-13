@@ -32,6 +32,7 @@ class SequentialSearchTable<V>(val size: Int) {
 		}
 		return false
 	}    
-			    
+	
+    fun size(index: Int): Int? = lists[index]?.size		    
 	    
 }
