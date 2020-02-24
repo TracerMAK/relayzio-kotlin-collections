@@ -17,12 +17,19 @@ class WellOrderedSetTest {
     val stringSet = WellOrderedSet<String>("This", "is", "a", "String", "set.")
     val intSet = WellOrderedSet<Int>(1, 3, 5, 7, 11, 13, 17, 19)
     
+    val comparator: (Int, Int) -> Int = {a:Int, b:Int ->
+        if (a < b) -1
+        else if (a > b) 1
+        else 0
+    }
+    
     @Test fun createEmptySet(): Unit {
         assertEquals(0, emptySet.size)
         assertFalse(emptySet.contains(5))
         assertFalse(emptySet.containsAll(listOf(1,2,3)))
         assertTrue(emptySet.isEmpty())
         assertFalse(emptySet.iterator().hasNext())
+        assertEquals("{}", emptySet.toString())
         
         var failed = false
         try { emptySet.iterator().next() }
@@ -45,8 +52,9 @@ class WellOrderedSetTest {
     @Test fun createWithDupes(): Unit {
         val set = WellOrderedSet<Int>(1,2,2,3,4,4,4,5,6)
         assertEquals(6, set.size)
-        assertTrue(set.containsAll(listOf(2,2,3,4,4)))
+        assertTrue(set.containsAll(listOf(5,2,3)))
         assertFalse(set.containsAll(listOf(4,7,2)))
+        assertEquals("{1, 2, 3, 4, 5, 6, }", set.toString())
     }
     
     @Test fun setContains(): Unit {
@@ -113,11 +121,61 @@ class WellOrderedSetTest {
         assertEquals("String", iter.next())
         assertTrue(iter.hasNext())
         assertEquals("set.", iter.next())
-		assertFalse(iter.hasNext())
+        assertFalse(iter.hasNext())
         
         var failed = false
         try { iter.next() }
         catch (e: NoSuchElementException) { failed = true }
         assertTrue(failed)
+    }
+    
+    @Test fun unorderedSmallSet() {	
+        val set = WellOrderedSet<Int>(3,2,2,4,2,1,4,5,6, comparator = comparator)
+        assertFalse(set.isEmpty())
+        assertEquals(6, set.size)
+        assertTrue(set.containsAll(listOf(5,2,3)))
+        assertFalse(set.containsAll(listOf(4,7,2)))
+        assertEquals("{1, 2, 3, 4, 5, 6, }", set.toString())
+        assertEquals(1, set.min())
+    }
+    
+    @Test fun measureHugeUnorderedSetLookupTime() {
+        val start = 999999
+        val huge = Array<Int>(1000000){index -> start - index}
+        lateinit var set: WellOrderedSet<Int>
+        
+        var lookupTime = measureTimeMillis {
+            set = WellOrderedSet<Int>(*huge, comparator = comparator)
+        }
+        println("Time to create million element unordered set = $lookupTime ms")
+                
+        assertEquals(1000000, set.size)
+        
+        lookupTime = measureNanoTime {
+            set.contains(1)
+        }
+        lookupTime /= 1000
+        var listIndex = (1.hashCode() and 0x7fffffff) % 997
+        var listSize = set.listSize(listIndex)
+        println("Size of search list $listIndex = $listSize")
+        println("Lookup time for first element of million element set = $lookupTime us")
+        
+        listIndex = (500000.hashCode() and 0x7fffffff) % 997
+        listSize = set.listSize(listIndex)
+        println("Size of search list $listIndex = $listSize")
+        lookupTime = measureNanoTime {
+            assertTrue(set.contains(500000))
+        }
+        lookupTime /= 1000
+        println("Lookup time for middle element of million element set = $lookupTime us")
+        
+        listIndex = (999999.hashCode() and 0x7fffffff) % 997
+        listSize = set.listSize(listIndex)	
+        println("Size of search list $listIndex = $listSize")	
+        lookupTime = measureNanoTime {
+            assertTrue(set.contains(999999))
+        }
+        lookupTime /= 1000
+        println("Lookup time for last element of million element set = $lookupTime us")
     }
 }

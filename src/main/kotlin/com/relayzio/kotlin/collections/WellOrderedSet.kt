@@ -4,7 +4,7 @@ import java.io.Serializable
 import com.relayzio.kotlin.tables.SequentialSearchTable
 
 /**
- * A well-ordered readonly Set that guarantees the existence of a least element and
+ * A well-ordered readonly Set that contains a least element and
  * follows the rules of antisymmetry, transitivity, and connexity.
  */
 sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
@@ -27,17 +27,17 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
                 private var done = false
                     
                 private fun compute(): () -> E {
-                    var firstElem: E = min()
+                    var nextElem: E = min()
                     var nextSet: WellOrderedSet<E> = back()
                     
                     val computeNext = fun(): E {
                         if (done) throw NoSuchElementException()						
-                        val elem = firstElem
+                        val elem = nextElem
                         
                         when (nextSet) {
                             is Empty -> done = true
                             is Cons -> {
-                                firstElem = nextSet.min()
+                                nextElem = nextSet.min()
                                 nextSet = nextSet.back()
                             }
                         }
@@ -88,13 +88,38 @@ sealed class WellOrderedSet<out E> : OrderedSet<E>, Serializable {
             return true
         }
         
-		override fun toString(): String = TODO("")
+		tailrec private fun toString(acc: String, set: WellOrderedSet<E>): String =
+		    when(set) {
+			    is Empty -> acc
+				is Cons -> toString("$acc${set.head}, ", set.tail)
+			}
+			
+		override fun toString(): String = "{${toString("", this)}}"
 		
         override fun listSize(index: Int): Int? = table.listSize(index)  // TODO: Remove after testing     
     }
     
     companion object {
-        // TODO("Add a comparator function as a parameter")
+	    /**
+		 * Invoker that will order the set using the provided comparator function.
+		 */
+        operator fun <E> invoke(vararg elems: E, comparator: (E, E) -> Int): WellOrderedSet<E> {
+		
+		    val comp = object : Comparator<E> {
+			    override fun compare(a: E, b: E): Int = comparator(a, b)
+			}
+			val sorted = elems.sortedArrayWith(comp)
+            val set = setOf(*sorted)
+            val table = SequentialSearchTable<Any?>(997)
+            return set.toList().foldRight(Empty()) {
+                head: E, tail: WellOrderedSet<E> -> Cons(head, tail, table)
+            }
+        }
+		
+		/**
+		 * Invoker that contains no knowledge of the internal ordering and assumes
+		 * the provided elements are already ordered.
+		 */
         operator fun <E> invoke(vararg elems: E): WellOrderedSet<E> {
             val set = setOf(*elems)
             val table = SequentialSearchTable<Any?>(997)
