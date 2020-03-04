@@ -84,7 +84,7 @@ class WellOrderedSetTest {
             set.contains(1)
         }
         lookupTime /= 1000
-        var listIndex = (1.hashCode() and 0x7fffffff) % 997
+        var listIndex = (0.hashCode() and 0x7fffffff) % 997
         var listSize = set.listSize(listIndex)
         println("Size of search list $listIndex = $listSize")
         println("Lookup time for first element of million element set = $lookupTime us")
@@ -177,5 +177,9 @@ class WellOrderedSetTest {
         }
         lookupTime /= 1000
         println("Lookup time for last element of million element set = $lookupTime us")
+		
+		val iter = set.iterator()
+		assertTrue(iter.hasNext())
+		assertEquals(0, iter.next())
     }
 }
